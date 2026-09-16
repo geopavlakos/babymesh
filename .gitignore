@@ -1,0 +1,14 @@
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# downloaded body models / checkpoints (see README for how to obtain these)
+_DATA/
+
+# optimization outputs
+outputs/
+
+# editors / OS
+.vscode/
+.DS_Store

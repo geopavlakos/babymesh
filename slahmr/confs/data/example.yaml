@@ -1,0 +1,6 @@
+# Points at the bundled example sequence. To fit your own capture, copy this
+# file, point `root` at your own data directory (an absolute path, or one
+# relative to the repo root -- see resolve_path() in util/loaders.py), and set
+# `seq` to your sequence's folder name under `root`.
+root: example_data
+seq: "07_03"

@@ -1,0 +1,28 @@
+optim:
+  options:
+    joints2d_sigma: 100.0
+    lr: 1.0
+    lbfgs_max_iter: 20
+    save_every: 20
+    vis_every: -1
+    max_chunk_steps: 20
+
+  root:
+    num_iters: 30
+
+  smpl:
+    # no-op by default: per-frame SMPL shape/pose is instead jointly optimized
+    # (with temporal terms) in the smooth_fit stage below. Raise this if you
+    # want an independent per-frame SMPL fit before the smoothing stage.
+    num_iters: 0
+
+  smooth:
+    num_iters: 60
+
+  # loss weights are two-element lists: [root_fit & smpl_fit stage, smooth_fit stage]
+  loss_weights:
+    joints2d: [0.01, 0.11]
+    joints3d: [100.0, 0.0]
+    joints3d_smooth: [0.0, 1000.0]
+    pose_prior: [0.04, 0.04]
+    shape_prior: [0.05, 0.05]

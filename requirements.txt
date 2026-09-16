@@ -1,0 +1,19 @@
+git+https://github.com/nghorbani/configer
+git+https://github.com/mattloper/chumpy
+setuptools==59.5.0
+tensorboard
+numpy
+smplx
+pyrender
+# pyrender pins PyOpenGL==3.1.0, but that version's ctypes array-type handlers
+# are broken with modern numpy (glGenTextures fails with
+# "No array-type handler for type _ctypes.type"); force a newer PyOpenGL that
+# fixes this -- functionally compatible with pyrender despite the version pin.
+PyOpenGL>=3.1.6
+trimesh
+imageio-ffmpeg
+matplotlib
+opencv-python
+tqdm
+hydra-core
+omegaconf

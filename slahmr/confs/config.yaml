@@ -1,0 +1,34 @@
+defaults:
+  - data: example
+  - optim
+  - _self_
+
+overwrite: False
+run_opt: False
+run_vis: False
+vis:
+  phases:
+    - root_fit
+    # smpl_fit is a no-op by default (see confs/optim.yaml) and has nothing to
+    # visualize unless you raise optim.smpl.num_iters
+    - smooth_fit
+  render_views:
+    - above
+    - side
+  make_grid: False
+  overwrite: False
+
+paths:
+  smpl: _DATA/body_models/smplh/male/model.npz
+  smpl_kid: _DATA/body_models/smpl_kid_template.npy
+  vposer: _DATA/body_models/vposer_v1_0
+
+log_root: ../outputs/logs
+log_dir: ${log_root}/${data.seq}
+exp_name: ${now:%Y-%m-%d_%H-%M-%S}
+
+hydra:
+  job:
+    chdir: True
+  run:
+    dir: ${log_dir}/${exp_name}
