@@ -51,7 +51,24 @@ def reproject(points3d, cam_R, cam_t, intrins, cam_dist):
     # this pipeline only ever fits a single subject (points3d batch dim is 1)
     points3d = torch.einsum("vtij,tnj->vtni", cam_R, points3d[0])
     points3d = points3d + cam_t[:, :, None, :]  # (V, T, N, 3)
-    points2d = points3d[..., :2] / points3d[..., 2:3]
+    # a point sitting almost exactly on a camera's image plane (depth ~= 0) --
+    # not unusual mid-optimization, e.g. for a poorly-initialized or transiently
+    # bad frame -- would otherwise divide by ~0 and produce NaN/Inf. Unlike a
+    # clamp on the *output* pixel coordinates (still applied below), NaN/Inf
+    # values pass through torch.clamp unchanged, so this has to happen on the
+    # denominator itself, before the division, to guarantee a finite result.
+    z = points3d[..., 2:3]
+    z_safe = torch.where(z >= 0, z.clamp(min=1e-3), z.clamp(max=-1e-3))
+    points2d = points3d[..., :2] / z_safe
+    # a severely diverged point (e.g. a transiently bad frame mid-optimization)
+    # can still land far enough off-plane to send the (degree-7 in r) radial
+    # distortion polynomial towards float32's overflow range; an inf produced
+    # there survives the final torch.clamp below, but an inf multiplied by an
+    # exactly-zero distortion coefficient anywhere in between (common -- not
+    # every camera has every term) yields 0*inf = NaN, which does not. Bound
+    # the normalized (pre-distortion) coordinates first so the polynomial
+    # itself never sees a large-enough input to risk that.
+    points2d = torch.clamp(points2d, min=-1e2, max=1e2)
     r2 = points2d[..., [0]] ** 2 + points2d[..., [1]] ** 2
     k1, k2, p1, p2, k3 = [cam_dist[:, :, None, [i]] for i in range(5)]
     radial = 1 + r2 * (k1 + r2 * (k2 + r2 * k3))

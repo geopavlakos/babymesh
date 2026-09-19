@@ -133,7 +133,11 @@ class SMPLLoss(RootLoss):
             cur_loss = (
                 shape_prior_loss(pred_data["betas"][:, :-1])
                 + shape_prior_loss(1 - pred_data["betas"][:, -1:])
-                + torch.sum(torch.exp(100 * (pred_data["betas"][:, -1:] - 1.1)))
+                # soft barrier against exceeding the kid template; the exponent is
+                # capped so an overshooting LBFGS trial step can't overflow to inf
+                + torch.sum(
+                    torch.exp(torch.clamp(100 * (pred_data["betas"][:, -1:] - 1.1), max=30.0))
+                )
             )
             loss = _add_loss_term(
                 loss,

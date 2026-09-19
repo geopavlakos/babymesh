@@ -9,6 +9,9 @@ from util.logger import Logger
 
 from .tools import read_keypoints
 
+# meters; keypoints farther than this from the world origin are treated as invalid
+MAX_ABS_COORD_3D = 20.0
+
 
 class MultiviewDataset(object):
     """
@@ -99,6 +102,15 @@ class MultiviewDataset(object):
         Logger.log(f"Loading 3D keypoints from {keyp3d_path}...")
         joints3d = np.load(keyp3d_path)["joints3d"].astype(np.float32)  # (T, J, 3)
         assert joints3d.shape[0] == self.seq_len
+
+        # A failed triangulation can produce absurd coordinates (observed: 8e5 m).
+        # One such joint dominates every loss term -- the temporal smoothness term
+        # scales with its square -- and drags the whole window away from the
+        # subject. Treat non-finite or implausibly distant joints as missing.
+        corrupt = ~np.isfinite(joints3d).all(-1) | (np.abs(joints3d) > MAX_ABS_COORD_3D).any(-1)
+        if corrupt.any():
+            Logger.log(f"WARNING: dropping {int(corrupt.sum())} corrupt 3D keypoint(s)")
+            joints3d[corrupt] = 0.0
 
         self.data_dict = {"joints2d": joints2d, "joints3d": joints3d}
 
